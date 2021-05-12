@@ -446,7 +446,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "netlify-rust"
+name = "netlify_deploy"
 version = "0.1.0"
 dependencies = [
  "envy",
