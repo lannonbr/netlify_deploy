@@ -16,6 +16,8 @@ struct Config {
 struct CliFlags {
     #[structopt(parse(from_os_str), long = "path")]
     path: std::path::PathBuf,
+    #[structopt(long)]
+    prod: bool,
 }
 
 #[derive(Serialize, Debug)]
@@ -67,7 +69,7 @@ async fn main() -> Result<(), reqwest::Error> {
 
     let create_deploy_args = CreateDeployArgs {
         files: hashes.clone(),
-        draft: false,
+        draft: !args.prod,
     };
 
     dbg!(&create_deploy_args);
