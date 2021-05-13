@@ -1,6 +1,7 @@
+use bimap::BiMap;
+use color_eyre::eyre::Result;
 use serde::{Deserialize, Serialize};
 use sha1::Sha1;
-use std::collections::HashMap;
 use std::fs::read;
 use std::path::Path;
 use structopt::StructOpt;
@@ -20,7 +21,7 @@ struct CliFlags {
 
 #[derive(Serialize, Debug)]
 struct CreateDeployArgs {
-    files: HashMap<String, String>,
+    files: BiMap<String, String>,
     draft: bool,
 }
 
@@ -31,15 +32,16 @@ struct CreateDeployResponse {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), reqwest::Error> {
+async fn main() -> Result<()> {
+    color_eyre::install()?;
+
+    let args = CliFlags::from_args();
+
     let config = match envy::from_env::<Config>() {
         Ok(config) => config,
         Err(error) => panic!("{:#?}", error),
     };
-
-    let args = CliFlags::from_args();
-
-    let mut hashes = HashMap::new();
+    let mut hashes = BiMap::new();
 
     println!("File hashes");
     for entry in WalkDir::new(&args.path) {
@@ -49,7 +51,7 @@ async fn main() -> Result<(), reqwest::Error> {
             let path = dir_entry.path();
             let path_suffix = &path.strip_prefix(&args.path.as_path()).unwrap();
 
-            let mut file = read(&path).unwrap();
+            let mut file = read(&path)?;
 
             let mut hasher = Sha1::new();
 
@@ -97,16 +99,10 @@ async fn main() -> Result<(), reqwest::Error> {
 
     dbg!(&resp_json);
 
-    let mut reverse_hashes = HashMap::new();
-
-    for (path, hash) in &hashes {
-        reverse_hashes.insert(hash, path);
-    }
-
     println!("Files needed to be uploaded: {}", resp_json.required.len());
 
     for required_hash in resp_json.required {
-        let file = reverse_hashes.get(&required_hash).unwrap();
+        let file = hashes.get_by_right(&required_hash).unwrap();
 
         let required_file_path = &args.path.as_path().join(Path::new(file));
 
