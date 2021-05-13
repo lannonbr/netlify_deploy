@@ -76,21 +76,12 @@ async fn main() -> Result<()> {
 
     let client: reqwest::Client = reqwest::Client::new();
 
-    let mut auth_headers = reqwest::header::HeaderMap::new();
-
-    auth_headers.insert(
-        "Authorization",
-        format!("Bearer {}", config.netlify_auth_token)
-            .parse()
-            .unwrap(),
-    );
-
     let resp_json = client
         .post(format!(
             "https://api.netlify.com/api/v1/sites/{}/deploys",
             config.netlify_site_id
         ))
-        .headers(auth_headers)
+        .bearer_auth(&config.netlify_auth_token)
         .json(&create_deploy_args)
         .send()
         .await?
@@ -108,28 +99,19 @@ async fn main() -> Result<()> {
 
         let file_contents = read(&required_file_path).unwrap();
 
-        let client = reqwest::Client::new();
-
-        let mut put_headers = reqwest::header::HeaderMap::new();
-
-        put_headers.insert(
-            "Authorization",
-            format!("Bearer {}", config.netlify_auth_token)
-                .parse()
-                .unwrap(),
-        );
-        put_headers.insert("Content-Type", "application/octet-stream".parse().unwrap());
-
         client
             .put(format!(
                 "https://api.netlify.com/api/v1/deploys/{}/files/{}",
                 resp_json.id, file
             ))
-            .headers(put_headers)
+            .header("Content-Type", "application/octet-stream")
+            .bearer_auth(&config.netlify_auth_token)
             .body(file_contents)
             .send()
             .await?;
     }
+
+    println!("Deploy successful!");
 
     Ok(())
 }
