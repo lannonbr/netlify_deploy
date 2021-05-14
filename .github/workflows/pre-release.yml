@@ -39,33 +39,16 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
-      - name: Run cargo build (Windows & Linux)
-        if: ${{ matrix.os != 'macos-latest' }}
+      - name: Run cargo build
         uses: actions-rs/cargo@v1
         with:
           command: build
           args: --release
-      - name: Run cargo build (MacOS)
-        if: ${{ matrix.os == 'macos-latest' }}
-        run: |
-          rustup target add x86_64-apple-darwin
-          cargo build --release --target=x86_64-apple-darwin
-
-          sudo xcode-select -s /Applications/Xcode_12.2.app/Contents/Developer/
-
-          # Set SDK environment variables
-          echo "SDKROOT=$(xcrun -sdk macosx11.0 --show-sdk-path)" >> $GITHUB_ENV
-          echo "MACOSX_DEPLOYMENT_TARGET=$(xcrun -sdk macosx11.0 --show-sdk-platform-version)" >> $GITHUB_ENV
-
-          rustup target add aarch64-apple-darwin
-
-          cargo build --release --target=aarch64-apple-darwin
-          lipo target/{x86_64,aarch64}-apple-darwin/release/netlify_deploy -create -output netlify_deploy
       - name: tar the binary for upload
         run: |
           if [[ "${{matrix.platform}}" == "macos" ]]; then
               brew install gnu-tar
-              gtar -cvzf netlify-deploy-${{matrix.platform}}-${{github.sha}}.tar.gz ${{matrix.target}}
+              gtar -C target -cvzf netlify-deploy-${{matrix.platform}}-${{github.sha}}.tar.gz release/${{matrix.target}}
           else
               tar -C target -cvzf netlify-deploy-${{matrix.platform}}-${{github.sha}}.tar.gz release/${{matrix.target}}
           fi
