@@ -48,8 +48,15 @@ jobs:
       - name: Run cargo build (MacOS)
         if: ${{ matrix.os == 'macos-latest' }}
         run: |
-          rustup target add x86_64-apple-darwin aarch64-apple-darwin
+          rustup target add x86_64-apple-darwin
           cargo build --release --target=x86_64-apple-darwin
+
+          # Set SDK environment variables
+          echo "SDKROOT=$(xcrun -sdk macosx11.0 --show-sdk-path)" >> $GITHUB_ENV
+          echo "MACOSX_DEPLOYMENT_TARGET=$(xcrun -sdk macosx11.0 --show-sdk-platform-version)" >> $GITHUB_ENV
+
+          rustup target add aarch64-apple-darwin
+
           cargo build --release --target=aarch64-apple-darwin
           lipo target/{x86_64,aarch64}-apple-darwin/release/netlify_deploy -create -output netlify_deploy
       - name: tar the binary for upload
