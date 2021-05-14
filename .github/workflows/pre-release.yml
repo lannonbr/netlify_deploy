@@ -5,8 +5,8 @@ jobs:
     name: Initialize Release
     runs-on: ubuntu-latest
     outputs:
-      release-url: ${{ steps.create_release.outputs.upload_url }}
-      release-id: ${{ steps.create_release.outputs.id }}
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      release_id: ${{ steps.create_release.outputs.id }}
     steps:
       - uses: actions/checkout@v2
       - name: Create Release
@@ -67,7 +67,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ needs.start-release.outputs.release-url }}
+          upload_url: ${{ needs.start-release.outputs.upload_url }}
           asset_path: netlify-deploy-${{matrix.platform}}-${{github.sha}}.tar.gz
           asset_name: netlify-deploy-${{matrix.platform}}-${{github.sha}}.tar.gz
           asset_content_type: application/octet-stream
@@ -79,6 +79,6 @@ jobs:
             github.repos.updateRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              release_id: "${{ needs.start-release.outputs.release-id }}",
+              release_id: "${{ needs.start-release.outputs.release_id }}",
               draft: false,
             });
