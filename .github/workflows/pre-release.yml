@@ -51,11 +51,11 @@ jobs:
           rustup target add x86_64-apple-darwin
           cargo build --release --target=x86_64-apple-darwin
 
-          sudo xcode-select -s /Applications/Xcode_12.4.app/Contents/Developer/
+          sudo xcode-select -s /Applications/Xcode_12.2.app/Contents/Developer/
 
           # Set SDK environment variables
-          echo "SDKROOT=$(xcrun -sdk macosx11.1 --show-sdk-path)" >> $GITHUB_ENV
-          echo "MACOSX_DEPLOYMENT_TARGET=$(xcrun -sdk macosx11.1 --show-sdk-platform-version)" >> $GITHUB_ENV
+          echo "SDKROOT=$(xcrun -sdk macosx11.0 --show-sdk-path)" >> $GITHUB_ENV
+          echo "MACOSX_DEPLOYMENT_TARGET=$(xcrun -sdk macosx11.0 --show-sdk-platform-version)" >> $GITHUB_ENV
 
           rustup target add aarch64-apple-darwin
 
