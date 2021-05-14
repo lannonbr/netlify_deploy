@@ -45,36 +45,39 @@ async fn main() -> Result<()> {
     };
     let mut hashes = BiMap::new();
 
-    println!("File hashes");
     for entry in WalkDir::new(&args.path) {
         let dir_entry = entry.unwrap();
 
         if !dir_entry.file_type().is_dir() {
             let path = dir_entry.path();
-            let path_suffix = &path.strip_prefix(&args.path.as_path()).unwrap();
+            let path_suffix = path.strip_prefix(&args.path.as_path()).unwrap();
 
-            let mut file = read(&path)?;
+            let file = read(&path)?;
 
             let mut hasher = Sha1::new();
 
-            hasher.update(&mut file);
+            hasher.update(&file);
 
             let hash = hasher.digest().to_string();
 
-            println!("{}: {}", &path_suffix.display(), hash);
-
-            let str = path.to_owned().into_os_string().into_string().unwrap();
+            let str = path_suffix
+                .to_owned()
+                .into_os_string()
+                .into_string()
+                .unwrap();
             hashes.insert(str, hash);
         }
     }
-    println!();
 
     let create_deploy_args = CreateDeployArgs {
         files: hashes.clone(),
         draft: !args.prod,
     };
 
-    dbg!(&create_deploy_args);
+    println!(
+        "Uploading {} files to be checked against the deployed site.",
+        create_deploy_args.files.len()
+    );
 
     let client: reqwest::Client = reqwest::Client::new();
 
@@ -90,8 +93,6 @@ async fn main() -> Result<()> {
         .json::<CreateDeployResponse>()
         .await?;
 
-    dbg!(&resp_json);
-
     println!("Files needed to be uploaded: {}", resp_json.required.len());
 
     for required_hash in resp_json.required {
@@ -99,7 +100,7 @@ async fn main() -> Result<()> {
 
         let required_file_path = &args.path.as_path().join(Path::new(file));
 
-        let file_contents = read(&required_file_path).unwrap();
+        let file_contents = read(&required_file_path)?;
 
         client
             .put(format!(
