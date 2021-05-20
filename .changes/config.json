@@ -1,0 +1,16 @@
+{
+  "gitSiteUrl": "https://github.com/lannonbr/netlify_deploy/",
+  "pkgManagers": {
+    "rust": {
+      "version": true,
+      "getPublishedVersion": "git tag -a -m \"v${ pkgFile.version }\" v${ pkgFile.version } 2>/dev/null || echo ${ pkgFile.version }",
+      "publish": "echo boop"
+    }
+  },
+  "packages": {
+    "netlify_deploy": {
+      "path": ".",
+      "manager": "rust"
+    }
+  }
+}
