@@ -27,7 +27,7 @@ jobs:
           echo "::set-output name=version::$(cargo read-manifest | jq .version | tr -d '\"')"
   start-release:
     needs: status
-    if: needs.status.outputs.status == "No changes."
+    if: ${{ needs.status.outputs.status == "No changes." }}
     name: Initialize Release
     runs-on: ubuntu-latest
     outputs:
@@ -102,7 +102,7 @@ jobs:
             });
   version:
     needs: status
-    if: needs.status.outputs.status != "No changes."
+    if: ${{ needs.status.outputs.status != "No changes." }}
     runs-on: ubuntu-latest
     timeout-minutes: 65
     outputs:
