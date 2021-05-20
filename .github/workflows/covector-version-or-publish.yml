@@ -86,8 +86,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.start-release.outputs.upload_url }}
-          asset_path: netlify-deploy-${{matrix.platform}}-${{github.sha}}.tar.gz
-          asset_name: netlify-deploy-${{matrix.platform}}-${{github.sha}}.tar.gz
+          asset_path: netlify-deploy-${{matrix.platform}}-${{ needs.status.outputs.version }}.tar.gz
+          asset_name: netlify-deploy-${{matrix.platform}}-${{ needs.status.outputs.version }}.tar.gz
           asset_content_type: application/octet-stream
       - name: Publish GH Release
         uses: actions/github-script@v3
