@@ -20,7 +20,7 @@ jobs:
         uses: jbolda/covector/packages/action@5797e792f532ad9bcb40c19cda080ca7713c0d91
         id: covector
         with:
-          command: 'status'
+          command: "status"
       - name: get new version
         id: new-version
         run: |
@@ -62,7 +62,6 @@ jobs:
           - os: windows-latest
             platform: windows
             target: netlify_deploy.exe
-    needs: start-release
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
