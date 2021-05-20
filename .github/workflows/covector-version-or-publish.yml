@@ -27,7 +27,7 @@ jobs:
           echo "::set-output name=version::$(cargo read-manifest | jq .version | tr -d '\"')"
   start-release:
     needs: status
-    if: ${{ needs.status.outputs.status == 'No changes.'' }}
+    if: ${{ needs.status.outputs.status == 'No changes.' }}
     name: Initialize Release
     runs-on: ubuntu-latest
     outputs:
@@ -128,7 +128,7 @@ jobs:
       - name: Create Pull Request With Versions Bumped
         id: cpr
         uses: peter-evans/create-pull-request@v3
-        if: steps.covector.outputs.commandRan == 'version'
+        if: ${{ steps.covector.outputs.commandRan == 'version' }}
         with:
           title: "Publish New Versions"
           commit-message: "publish new versions"
