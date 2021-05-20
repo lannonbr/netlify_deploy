@@ -8,7 +8,7 @@ on:
 jobs:
   status:
     runs-on: ubuntu-latest
-    output:
+    outputs:
       status: ${{ steps.covector.outputs.status }}
       version: ${{ steps.new-version.outputs.version }}
 
