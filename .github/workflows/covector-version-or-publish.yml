@@ -41,12 +41,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: pre-release-${{ needs.status.outputs.version }}
+          tag_name: netlify_deploy-v${{ needs.status.outputs.version }}
           name: v${{ needs.status.outputs.version }}
           body: |
             New version built with Covector
           draft: true
-          prerelease: true
   build-binaries:
     needs: [start-release, status]
     strategy:
@@ -158,7 +157,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           command: "version-or-publish"
-          createRelease: true
+          createRelease: false
       - name: Publish GH Release
         uses: actions/github-script@v3
         with:
@@ -168,5 +167,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               release_id: "${{ needs.start-release.outputs.release_id }}",
-              body: "${{ steps.covector.outputs.change }}",
+              body: JSON.parse('${{ steps.covector.outputs.change }}')['netlify_deploy'].command,
             });
