@@ -1,5 +1,10 @@
 # Changelog
 
+## \[0.2.2]
+
+- Trying a final time to fix the workflow
+  - [f4bd2e2](https://github.com/lannonbr/netlify_deploy/commit/f4bd2e28068633efc9c9644cf5910d524fbe60ad) final tweak to CI on 2021-05-20
+
 ## \[0.2.1]
 
 - Updated version-or-publish workflow to get rid of duplicate release, update the release name, and properly populate release body.
