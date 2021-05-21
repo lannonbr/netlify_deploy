@@ -167,5 +167,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               release_id: "${{ needs.start-release.outputs.release_id }}",
-              body: JSON.parse('${{ steps.covector.outputs.change }}')['netlify_deploy'].command,
+              body: ${{ steps.covector.outputs.change }}.netlify_deploy.command,
             });
