@@ -1,9 +1,10 @@
 use bimap::BiMap;
 use color_eyre::eyre::Result;
+use futures::future::try_join_all;
+use futures::stream::StreamExt;
 use serde::{Deserialize, Serialize};
 use sha1::Sha1;
-use std::fs::read;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use structopt::StructOpt;
 use walkdir::WalkDir;
 
@@ -33,6 +34,18 @@ struct CreateDeployResponse {
     required: Vec<String>,
 }
 
+async fn make_hash(path: PathBuf) -> Result<String, Box<dyn std::error::Error + 'static>> {
+    let file = tokio::fs::read(path).await?;
+
+    let mut hasher = Sha1::new();
+
+    hasher.update(&file);
+
+    let hash = hasher.digest().to_string();
+
+    Ok(hash)
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     color_eyre::install()?;
@@ -45,28 +58,34 @@ async fn main() -> Result<()> {
     };
     let mut hashes = BiMap::new();
 
+    let mut hash_futures = vec![];
+    let mut strs = vec![];
+
     for entry in WalkDir::new(&args.path) {
         let dir_entry = entry.unwrap();
+        let is_dir = dir_entry.file_type().is_dir();
+        let path = dir_entry.path();
 
-        if !dir_entry.file_type().is_dir() {
-            let path = dir_entry.path();
+        if !is_dir {
             let path_suffix = path.strip_prefix(&args.path.as_path()).unwrap();
-
-            let file = read(&path)?;
-
-            let mut hasher = Sha1::new();
-
-            hasher.update(&file);
-
-            let hash = hasher.digest().to_string();
 
             let str = path_suffix
                 .to_owned()
                 .into_os_string()
                 .into_string()
                 .unwrap();
-            hashes.insert(str, hash);
+
+            let hash_fut = make_hash(path.to_owned());
+
+            strs.push(str.clone());
+            hash_futures.push(hash_fut);
         }
+    }
+
+    let resolved_hashes = try_join_all(hash_futures).await.unwrap();
+
+    for (pos, hash) in resolved_hashes.iter().enumerate() {
+        hashes.insert(strs.get(pos).unwrap().to_string(), hash.clone());
     }
 
     let create_deploy_args = CreateDeployArgs {
@@ -95,24 +114,41 @@ async fn main() -> Result<()> {
 
     println!("Files needed to be uploaded: {}", resp_json.required.len());
 
-    for required_hash in resp_json.required {
-        let file = hashes.get_by_right(&required_hash).unwrap();
+    let iter = resp_json.required.clone().into_iter();
 
-        let required_file_path = &args.path.as_path().join(Path::new(file));
+    let response = futures::stream::iter(iter)
+        .map(|required_hash| {
+            let client = &client;
+            let auth_token = &config.netlify_auth_token;
+            let file = hashes.get_by_right(&required_hash).unwrap().clone();
+            let deploy_id = resp_json.id.clone();
 
-        let file_contents = read(&required_file_path)?;
+            let required_file_path = args.path.as_path().join(Path::new(&file));
 
-        client
-            .put(format!(
-                "https://api.netlify.com/api/v1/deploys/{}/files/{}",
-                resp_json.id, file
-            ))
-            .header("Content-Type", "application/octet-stream")
-            .bearer_auth(&config.netlify_auth_token)
-            .body(file_contents)
-            .send()
-            .await?;
-    }
+            async move {
+                let file_contents = tokio::fs::read(required_file_path).await.unwrap();
+                client
+                    .put(format!(
+                        "https://api.netlify.com/api/v1/deploys/{}/files/{}",
+                        deploy_id, file
+                    ))
+                    .header("Content-Type", "application/octet-stream")
+                    .bearer_auth(auth_token)
+                    .body(file_contents)
+                    .send()
+                    .await
+            }
+        })
+        .buffer_unordered(5);
+
+    response
+        .for_each(|r| async {
+            match r {
+                Ok(_) => (),
+                Err(e) => eprintln!("Error: {}", e),
+            }
+        })
+        .await;
 
     println!("Deploy successful!");
 
