@@ -1,6 +1,6 @@
 [package]
 name = "netlify_deploy"
-version = "0.2.2"
+version = "0.3.0"
 authors = [ "Benjamin Lannon <benjamin@lannonbr.com>" ]
 license = "MIT"
 repository = "https://github.com/lannonbr/netlify_deploy"
