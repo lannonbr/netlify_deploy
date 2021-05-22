@@ -1,5 +1,10 @@
 # Changelog
 
+## \[0.3.0]
+
+- The File I/O reads & HTTP requests are now running asynchronously on top of Tokio. This reduced a 2,000 file upload to Netlify down to ~1 minute.
+  - [238b450](https://github.com/lannonbr/netlify_deploy/commit/238b45065819e1e154b07c407e4cba7d5808acf6) Switching sync tasks to run async on 2021-05-22
+
 ## \[0.2.2]
 
 - Trying a final time to fix the workflow
