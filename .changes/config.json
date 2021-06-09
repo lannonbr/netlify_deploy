@@ -3,14 +3,15 @@
   "pkgManagers": {
     "rust": {
       "version": true,
-      "getPublishedVersion": "git tag -a -m \"v${ pkgFile.version }\" v${ pkgFile.version } 2>/dev/null || echo ${ pkgFile.version }",
+      "getPublishedVersion": "git log v${ pkgFile.version } -1 --pretty=%Cgreen${ pkgFile.version } || echo \"not published yet\"",
       "publish": "echo boop"
     }
   },
   "packages": {
     "netlify_deploy": {
       "path": ".",
-      "manager": "rust"
+      "manager": "rust",
+      "releaseTag": "v${ pkgFile.version }"
     }
   }
 }
